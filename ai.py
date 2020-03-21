@@ -54,10 +54,13 @@ def get_bot_response(sender, text=None, attachments=None, nlp=None):
             return f"CSEDU'24 classroom calendar: {info['calendar']['url']}\nYou can join here {info['calendar']['join']}"
 
         # others
-        if (contains(text, (["lame", "dad"], "joke"))):
-            joke = requests.get('https://icanhazdadjoke.com/',
-                                headers={'Accept': 'text/plain', }).text
-            return random.choice(["", "Ok here's a good one\n\n"]) + joke
+        if (contains(text, "joke")):
+            if (contains(text, ["lame", "dad"])):
+                joke = requests.get('https://icanhazdadjoke.com/',
+                                    headers={'Accept': 'text/plain', }).text
+                return random.choice(["", "Ok here's a good one\n\n"]) + joke
+            else:
+                return "I only know lame jokes :3"
 
     if nlp:
         # respond to general greeting
