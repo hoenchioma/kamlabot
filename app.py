@@ -1,9 +1,13 @@
+import os
 import logging
 from flask import Flask, request
 from pymessenger.bot import Bot
-from ai import get_bot_response
-from credentials import *
 
+from ai import get_bot_response
+
+# set config variables
+ACCESS_TOKEN = os.environ['FB_ACCESS_TOKEN']
+VERIFY_TOKEN = os.environ['FB_VERIFY_TOKEN']
 
 app = Flask(__name__)
 bot = Bot(ACCESS_TOKEN)
