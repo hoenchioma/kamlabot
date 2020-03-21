@@ -34,7 +34,7 @@ def listen():
     # responding to a message
     if request.method == 'POST':
         payload = request.json
-        logging.info("message: " + repr(payload))
+        # logging.info("message: " + repr(payload))
         for event in payload['entry']:
             for messaging in event['messaging']:
                 if (messaging.get('message') and
