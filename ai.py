@@ -65,12 +65,12 @@ def get_bot_response(sender, text=None, attachments=None, nlp=None):
     if nlp:
         # respond to general greeting
         entities = nlp['entities']
+        if entities.get('bye') and entities['bye'][0]['confidence'] > CONFIDENCE_THRESHOLD:
+            return random.choice(["Ok, Bye", "Bye", "See you soon 😃"])
         if entities.get('thanks') and entities['thanks'][0]['confidence'] > CONFIDENCE_THRESHOLD:
             return "Your welcome 😃"
         if entities.get('greetings') and entities['greetings'][0]['confidence'] > CONFIDENCE_THRESHOLD:
             return random.choice(["Hi there", "Hello", "Hi"]) + random.choice([" 😃", ""])
-        if entities.get('bye') and entities['bye'][0]['confidence'] > CONFIDENCE_THRESHOLD:
-            return random.choice(["Ok, Bye", "Bye", "See you soon 😃"])
 
     return random.choice([
         "Error 404: not smart enough to respond to that",

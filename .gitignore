@@ -4,3 +4,5 @@
 __pycache__
 # vscode files
 .vscode
+# environment variables script
+env.sh
