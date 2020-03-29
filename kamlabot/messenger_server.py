@@ -67,11 +67,11 @@ def send_message(recipient_id, text):
     return "success"
 
 
-def respond(sender, text=None, attachments=None, nlp=None):
+def respond(sender, text=None, attachments=None):
     """Formulate a response to the user and
     pass it on to a function that sends it."""
 
-    response = get_bot_response(sender, text, attachments, nlp)
+    response = get_bot_response(sender, text, attachments)
     if response:
         send_message(sender, response)
 
