@@ -7,10 +7,12 @@ import requests
 import logging
 
 from . import database as db
+from .. import __version__
 
 # wit.ai
 WIT_AI_TOKEN = os.environ['WIT_AI_CLIENT_TOKEN']
 
+# cache responses
 responses = db.get_responses()
 
 
@@ -19,24 +21,31 @@ def get_bot_response(sender, text=None, attachments=None):
     try:
         if text:
             entities = get_entities(text)
-            
-            if ('@help' in text): return process(responses['help'])
-            
-                
+
+            if ('@help' in text):
+                return get_help_txt()
+
             # detection using intent
             if (entities.get('intent')):
                 intent = entities['intent'][0]['value']
-                
-                if (intent == 'help'): return process(responses['help'])
-                if (intent == 'positive'): return process(responses['positive'])
-                if (intent == 'negative'): return process(responses['negative'])
-                if (intent == 'getBotIdentity'): return process(responses['identity'])
-                
+
+                if (intent == 'help'):
+                    return get_help_txt()
+                if (intent == 'positive'):
+                    return process(responses['positive'])
+                if (intent == 'negative'):
+                    return process(responses['negative'])
+                if (intent == 'getBotIdentity'):
+                    return process(responses['identity'])
+
                 # greetings (hi, bye, thanks)
-                if (intent == 'greetings'): return process(responses['greetings'])
-                if (intent == 'bye'): return process(responses['bye'])
-                if (intent == 'thanks'): return process(responses['thanks'])
-                
+                if (intent == 'greetings'):
+                    return process(responses['greetings'])
+                if (intent == 'bye'):
+                    return process(responses['bye'])
+                if (intent == 'thanks'):
+                    return process(responses['thanks'])
+
                 # tasks
                 if (intent == 'getSchedule'):
                     routine = db.get_info('routine')
@@ -51,7 +60,8 @@ def get_bot_response(sender, text=None, attachments=None):
                 if (intent == 'getSyllabus'):
                     syllabus = None
                     if entities.get('exam'):
-                        syllabus = db.get_info('site/' + entities['exam'][0]['value'])
+                        syllabus = db.get_info(
+                            'site/' + entities['exam'][0]['value'])
                         print()
                     else:
                         syllabus = db.get_info('site/_all')
@@ -66,15 +76,18 @@ def get_bot_response(sender, text=None, attachments=None):
                         return f"You'll find all the drive links here\n{drives['_all']}"
                 if (intent == 'getJoke'):
                     return get_joke()
-                
+
             # detection using other entities
-            if (entities.get('greetings')): return process(responses['greetings'])
-            if (entities.get('bye')): return process(responses['bye'])
-            if (entities.get('thanks')): return process(responses['thanks'])
-    
+            if (entities.get('greetings')):
+                return process(responses['greetings'])
+            if (entities.get('bye')):
+                return process(responses['bye'])
+            if (entities.get('thanks')):
+                return process(responses['thanks'])
+
         # when bot doesn't understand the text
         return process(responses['no_reply'])
-    
+
     except Exception as exp:
         logging.error(f"Error generating response ({str(exp)})")
         return None
@@ -83,13 +96,13 @@ def get_bot_response(sender, text=None, attachments=None):
 def process(entry) -> str:
     """Process entries from database to generate responses"""
     try:
-        if isinstance(entry, str): # if string return directly
+        if isinstance(entry, str):  # if string return directly
             return entry
         elif isinstance(entry, list):
-            if isinstance(entry[0], list): # if it is a list of lists
+            if isinstance(entry[0], list):  # if it is a list of lists
                 # choose random string from each (internal) list and concatenate them
                 return ''.join(random.choice(i) for i in entry)
-            elif isinstance(entry[0], str): # if it is a list of strings
+            elif isinstance(entry[0], str):  # if it is a list of strings
                 # choose random string from list
                 return random.choice(entry)
         raise "Incorrect type"
@@ -138,6 +151,11 @@ def get_joke() -> str:
         response = requests.get(
             'https://sv443.net/jokeapi/v2/joke/Miscellaneous?blacklistFlags=nsfw&format=txt')
         return response.text
+
+
+def get_help_txt():
+    """Return help text with the version number of the app"""
+    return process(responses['help']) + f"\n\n(kamlabot v{__version__})"
 
 
 if __name__ == "__main__":
