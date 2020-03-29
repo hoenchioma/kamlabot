@@ -1,7 +1,8 @@
+# database files
+database.json
+
 # vscode files
 .vscode
-# environment variables script
-env.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

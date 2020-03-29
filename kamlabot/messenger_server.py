@@ -3,7 +3,7 @@ import logging
 from flask import Flask, request
 from pymessenger.bot import Bot
 
-from ai import get_bot_response
+from .misc.ai import get_bot_response
 
 # set config variables
 ACCESS_TOKEN = os.environ['FB_ACCESS_TOKEN']
@@ -45,12 +45,11 @@ def listen():
                     # extract contents of message
                     text = message.get('text')
                     attachments = message.get('attachments')
-                    nlp = message.get('nlp')
                     
                     # if text or attachments (image/gif) is present
                     if text or attachments:
                         # respond to message
-                        respond(sender_id, text, attachments, nlp)
+                        respond(sender_id, text, attachments)
         return "ok"
 
 
