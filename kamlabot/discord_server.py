@@ -28,6 +28,8 @@ async def on_message(msg):
     # we do not want the bot to reply to itself
     if msg.author == client.user:
         return
+    
+    response = None
 
     # message starts with keyword
     if msg.content.startswith(KEYWORD):
