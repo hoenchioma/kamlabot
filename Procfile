@@ -1,1 +1,2 @@
-web: gunicorn kamlabot.messenger_server:app & python3 -m kamlabot.discord_server & wait
+web: gunicorn kamlabot.messenger_server:app
+worker: python3 -m kamlabot.discord_server
