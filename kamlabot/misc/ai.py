@@ -13,38 +13,38 @@ from .. import __version__
 WIT_AI_TOKEN = os.environ['WIT_AI_CLIENT_TOKEN']
 
 # cache responses
-responses = db.get_responses()
+_responses = db.get_responses()
 
 
 def get_bot_response(sender, text=None, attachments=None):
     """Generate response based text, attachments and nlp entities"""
     try:
         if text:
-            entities = get_entities(text)
+            entities = _get_entities(text)
 
             if ('@help' in text):
-                return get_help_txt()
+                return _get_help_txt()
 
             # detection using intent
             if (entities.get('intent')):
                 intent = entities['intent'][0]['value']
 
                 if (intent == 'help'):
-                    return get_help_txt()
+                    return _get_help_txt()
                 if (intent == 'positive'):
-                    return process(responses['positive'])
+                    return _process(_responses['positive'])
                 if (intent == 'negative'):
-                    return process(responses['negative'])
+                    return _process(_responses['negative'])
                 if (intent == 'getBotIdentity'):
-                    return process(responses['identity'])
+                    return _process(_responses['identity'])
 
                 # greetings (hi, bye, thanks)
                 if (intent == 'greetings'):
-                    return process(responses['greetings'])
+                    return _process(_responses['greetings'])
                 if (intent == 'bye'):
-                    return process(responses['bye'])
+                    return _process(_responses['bye'])
                 if (intent == 'thanks'):
-                    return process(responses['thanks'])
+                    return _process(_responses['thanks'])
 
                 # tasks
                 if (intent == 'getSchedule'):
@@ -75,25 +75,25 @@ def get_bot_response(sender, text=None, attachments=None):
                     else:
                         return f"You'll find all the drive links here\n{drives['_all']}"
                 if (intent == 'getJoke'):
-                    return get_joke()
+                    return _get_joke()
 
             # detection using other entities
             if (entities.get('greetings')):
-                return process(responses['greetings'])
+                return _process(_responses['greetings'])
             if (entities.get('bye')):
-                return process(responses['bye'])
+                return _process(_responses['bye'])
             if (entities.get('thanks')):
-                return process(responses['thanks'])
+                return _process(_responses['thanks'])
 
         # when bot doesn't understand the text
-        return process(responses['no_reply'])
+        return _process(_responses['no_reply'])
 
     except Exception as exp:
         logging.error(f"Error generating response ({str(exp)})")
         return None
 
 
-def process(entry) -> str:
+def _process(entry) -> str:
     """Process entries from database to generate responses"""
     try:
         if isinstance(entry, str):  # if string return directly
@@ -111,7 +111,7 @@ def process(entry) -> str:
         return ""
 
 
-def get_entities(msg: str) -> dict:
+def _get_entities(msg: str) -> dict:
     """Get nlp entities using wit.ai"""
     WIT_AI_URL = 'https://api.wit.ai/message'
     headers = {'Authorization': 'Bearer ' + WIT_AI_TOKEN}
@@ -123,7 +123,7 @@ def get_entities(msg: str) -> dict:
     return response.json()['entities']
 
 
-def get_joke() -> str:
+def _get_joke() -> str:
     """Get a joke randomly from one of 4/5 api choices"""
     choice = random.choices(
         ['lame', 'yo mama', 'chuck norris', 'programming', 'others'],
@@ -153,9 +153,9 @@ def get_joke() -> str:
         return response.text
 
 
-def get_help_txt():
+def _get_help_txt():
     """Return help text with the version number of the app"""
-    return process(responses['help']) + f"\n\n(kamlabot v{__version__})"
+    return _process(_responses['help']) + f"\n\n(kamlabot v{__version__})"
 
 
 if __name__ == "__main__":
