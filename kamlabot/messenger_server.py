@@ -12,8 +12,8 @@ VERIFY_TOKEN = os.environ['FB_VERIFY_TOKEN']
 app = Flask(__name__)
 bot = Bot(ACCESS_TOKEN)
 
-# set logging level to debug
-logging.basicConfig(level=logging.DEBUG)
+# set logging level to info
+logging.basicConfig(level=logging.INFO)
 
 
 @app.route('/')

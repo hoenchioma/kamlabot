@@ -62,7 +62,6 @@ def get_bot_response(sender, text=None, attachments=None):
                     if entities.get('exam'):
                         syllabus = db.get_info(
                             'site/' + entities['exam'][0]['value'])
-                        print()
                     else:
                         syllabus = db.get_info('site/_all')
                     return f"I think what you're looking for is here {syllabus}"

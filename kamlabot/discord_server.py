@@ -10,7 +10,7 @@ KEYWORD = '!kamla'
 # discord client (bot)
 client = discord.Client()
 
-# set logging level to debug
+# set logging level to info
 logging.basicConfig(level=logging.INFO)
 
 @client.event
