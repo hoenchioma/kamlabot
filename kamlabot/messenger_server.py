@@ -1,14 +1,27 @@
 import os
 import logging
-from flask import Flask, request
+import markdown
+from flask import Flask, request, render_template
 from pymessenger.bot import Bot
 
 from .misc.ai import get_bot_response
+
+# markdown support
+DISPLAY_PAGE = 'README.md'
+md_ext=[
+    'fenced_code',
+    'codehilite',
+    'sane_lists',
+    'nl2br',
+    'wikilinks' 
+]
+md = markdown.Markdown(extensions=md_ext)
 
 # set config variables
 ACCESS_TOKEN = os.environ['FB_ACCESS_TOKEN']
 VERIFY_TOKEN = os.environ['FB_VERIFY_TOKEN']
 
+# initialize app
 app = Flask(__name__)
 bot = Bot(ACCESS_TOKEN)
 
@@ -18,8 +31,12 @@ logging.basicConfig(level=logging.INFO)
 
 @app.route('/')
 def hello():
-    """Greet use who visits the actual url"""
-    return "Hello! 😃"
+    """Show the README.md when someone visits the site"""
+    html = None
+    if os.path.isfile(DISPLAY_PAGE):
+        with open(DISPLAY_PAGE) as f:
+            html = md.convert(f.read())
+    return html
 
 
 @app.route('/webhook', methods=['GET', 'POST'])
