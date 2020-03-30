@@ -64,6 +64,8 @@ def _send_message(recipient_id, text):
     """Send a response to Facebook"""
 
     bot.send_text_message(recipient_id, text)
+    
+    logging.info(f"Response sent to {recipient_id}")
     return "success"
 
 
