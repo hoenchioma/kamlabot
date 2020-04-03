@@ -1,21 +1,11 @@
 import os
 import logging
-import markdown
-from flask import Flask, request, render_template
+from flask import Flask, request, redirect
 from pymessenger.bot import Bot
 
 from .misc.ai import get_bot_response
 
-# markdown support
-DISPLAY_PAGE = 'README.md'
-md_ext=[
-    'fenced_code',
-    'codehilite',
-    'sane_lists',
-    'nl2br',
-    'wikilinks' 
-]
-md = markdown.Markdown(extensions=md_ext)
+GITHUB_URL = 'https://github.com/hoenchioma/kamlabot'
 
 # set config variables
 ACCESS_TOKEN = os.environ['FB_ACCESS_TOKEN']
@@ -31,12 +21,8 @@ logging.basicConfig(level=logging.INFO)
 
 @app.route('/')
 def hello():
-    """Show the README.md when someone visits the site"""
-    html = None
-    if os.path.isfile(DISPLAY_PAGE):
-        with open(DISPLAY_PAGE) as f:
-            html = md.convert(f.read())
-    return html
+    """Redirect to GitHub page when someone visits site"""
+    return redirect(GITHUB_URL)
 
 
 @app.route('/webhook', methods=['GET', 'POST'])
