@@ -56,7 +56,7 @@ def get_bot_response(sender, text=None, attachments=None):
                         return db.get_info('site/' + entities['website'][0]['value'])
                     else:
                         sites = db.get_info('site')
-                        return '\n'.join([f"{site.upper()} site link: {link}" for site, link in sites.items()])
+                        return '\n'.join(f"{site.upper()} site link: {link}" for site, link in sites.items())
                 if (intent == 'getSyllabus'):
                     syllabus = None
                     if entities.get('exam'):
