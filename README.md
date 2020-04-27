@@ -47,3 +47,4 @@ For heroku you can run both in a single dyno by placing the following in the Pro
 web: gunicorn kamlabot.messenger_server:app
 worker: python3 -m kamlabot.discord_server
 ```
+You will also need to set the config variables in heroku to the values we obtained in Step 1
