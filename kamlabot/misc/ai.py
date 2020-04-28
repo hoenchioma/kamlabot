@@ -5,6 +5,7 @@ import json
 import random
 import requests
 import logging
+from dpath.util import get
 
 from . import database as db
 from .. import __version__
@@ -123,32 +124,22 @@ def _get_entities(msg: str) -> dict:
 
 
 def _get_joke() -> str:
-    """Get a joke randomly from one of 4/5 api choices"""
-    choice = random.choices(
-        ['lame', 'yo mama', 'chuck norris', 'programming', 'others'],
-        weights=[3, 1, 0, 4, 4],  # weights
-        k=1  # return only one answer
+    """Get a joke randomly from one of several api choices"""
+    api_list = db.get_others('joke-api/__list__')
+    # randomly choose a single api
+    api_key = random.choices(
+        [api['key'] for api in api_list],
+        weights=[api['weight'] for api in api_list], # weights
+        k=1 # return only one answer
     )[0]
-    if choice == 'lame':  # lame/dad jokes
-        headers = {'Accept': 'application/json', }
-        response = requests.get('https://icanhazdadjoke.com/', headers=headers)
-        return response.json()['joke']
-    elif choice == 'yo mama':  # yo mama jokes
-        headers = {'Accept': 'application/json', }
-        response = requests.get('https://api.yomomma.info/', headers=headers)
-        return response.json()['joke']
-    elif choice == 'chuck norris':  # Chuck Norris jokes
-        headers = {'Accept': 'application/json', }
-        response = requests.get(
-            'http://api.icndb.com/jokes/random/', headers=headers)
-        return response.json()['value']['joke']
-    elif choice == 'programming':  # programming jokes
-        response = requests.get(
-            'https://sv443.net/jokeapi/v2/joke/Programming?blacklistFlags=nsfw&format=txt')
-        return response.text
-    else:  # other jokes
-        response = requests.get(
-            'https://sv443.net/jokeapi/v2/joke/Miscellaneous?blacklistFlags=nsfw&format=txt')
+    logging.info(f"Using joke api \"{api_key}\"")
+    
+    api = db.get_others('joke-api/' + api_key)
+    
+    response = requests.get(api['url'], headers=api.get('headers'))
+    if api['result']['type'] == "json":
+        return get(response.json(), api['result']['path'])
+    elif api['result']['type'] == "text":
         return response.text
 
 
