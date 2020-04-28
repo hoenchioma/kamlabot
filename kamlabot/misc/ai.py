@@ -11,10 +11,8 @@ from . import database as db
 from .. import __version__
 
 # wit.ai
+WIT_AI_URL = 'https://api.wit.ai/message'
 WIT_AI_TOKEN = os.environ['WIT_AI_CLIENT_TOKEN']
-
-# cache responses
-_responses = db.get_responses()
 
 
 def get_bot_response(sender, text=None, attachments=None):
@@ -33,19 +31,19 @@ def get_bot_response(sender, text=None, attachments=None):
                 if (intent == 'help'):
                     return _get_help_txt()
                 if (intent == 'positive'):
-                    return _process(_responses['positive'])
+                    return _process(_get_responses('positive'))
                 if (intent == 'negative'):
-                    return _process(_responses['negative'])
+                    return _process(_get_responses('negative'))
                 if (intent == 'getBotIdentity'):
-                    return _process(_responses['identity'])
+                    return _process(_get_responses('identity'))
 
                 # greetings (hi, bye, thanks)
                 if (intent == 'greetings'):
-                    return _process(_responses['greetings'])
+                    return _process(_get_responses('greetings'))
                 if (intent == 'bye'):
-                    return _process(_responses['bye'])
+                    return _process(_get_responses('bye'))
                 if (intent == 'thanks'):
-                    return _process(_responses['thanks'])
+                    return _process(_get_responses('thanks'))
 
                 # tasks
                 if (intent == 'getSchedule'):
@@ -79,14 +77,14 @@ def get_bot_response(sender, text=None, attachments=None):
 
             # detection using other entities
             if (entities.get('greetings')):
-                return _process(_responses['greetings'])
+                return _process(_get_responses('greetings'))
             if (entities.get('bye')):
-                return _process(_responses['bye'])
+                return _process(_get_responses('bye'))
             if (entities.get('thanks')):
-                return _process(_responses['thanks'])
+                return _process(_get_responses('thanks'))
 
         # when bot doesn't understand the text
-        return _process(_responses['no_reply'])
+        return _process(_get_responses('no_reply'))
 
     except Exception as exp:
         logging.error(f"Error generating response ({str(exp)})")
@@ -111,14 +109,21 @@ def _process(entry) -> str:
         return ""
 
 
+def _get_responses(key: str):
+    """Get responses from db according to key"""
+    try:
+        # return cached result
+        return _get_responses.cache[key]
+    except AttributeError:
+        # if responses not cached save db response to cache
+        _get_responses.cache = db.get_responses()
+        return _get_responses.cache[key]
+
+
 def _get_entities(msg: str) -> dict:
     """Get nlp entities using wit.ai"""
-    WIT_AI_URL = 'https://api.wit.ai/message'
     headers = {'Authorization': 'Bearer ' + WIT_AI_TOKEN}
-    params = (
-        ('v', '20200328'),
-        ('q', msg),
-    )
+    params = (('v', '20200328'), ('q', msg),)
     response = requests.get(WIT_AI_URL, headers=headers, params=params)
     return response.json()['entities']
 
@@ -129,13 +134,13 @@ def _get_joke() -> str:
     # randomly choose a single api
     api_key = random.choices(
         [api['key'] for api in api_list],
-        weights=[api['weight'] for api in api_list], # weights
-        k=1 # return only one answer
+        weights=[api['weight'] for api in api_list],  # weights
+        k=1  # return only one answer
     )[0]
     logging.info(f"Using joke api \"{api_key}\"")
-    
+
     api = db.get_others('joke-api/' + api_key)
-    
+
     response = requests.get(api['url'], headers=api.get('headers'))
     if api['result']['type'] == "json":
         return get(response.json(), api['result']['path'])
@@ -145,7 +150,7 @@ def _get_joke() -> str:
 
 def _get_help_txt():
     """Return help text with the version number of the app"""
-    return _process(_responses['help']) + f"\n\n(kamlabot v{__version__})"
+    return _process(_get_responses('help')) + f"\n\n(kamlabot v{__version__})"
 
 
 if __name__ == "__main__":
