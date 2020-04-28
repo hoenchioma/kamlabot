@@ -11,13 +11,13 @@ GITHUB_URL = 'https://github.com/hoenchioma/kamlabot'
 ACCESS_TOKEN = os.environ['FB_ACCESS_TOKEN']
 VERIFY_TOKEN = os.environ['FB_VERIFY_TOKEN']
 
-# initialize app
-app = Flask(__name__)
-bot = Bot(ACCESS_TOKEN)
-
 # setup logger
 logging.basicConfig(level=logging.INFO,
                     format='[MESSENGER] %(levelname)s : %(module)s.%(funcName)s : %(message)s')
+
+# initialize app
+app = Flask(__name__)
+bot = Bot(ACCESS_TOKEN)
 
 
 @app.route('/')
@@ -68,7 +68,7 @@ def _send_message(recipient_id, text):
     """Send a response to Facebook"""
 
     bot.send_text_message(recipient_id, text)
-    
+
     logging.info(f"Response sent to {recipient_id}")
     return "success"
 

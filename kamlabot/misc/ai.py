@@ -1,12 +1,12 @@
 """AI for generating responses for the chatbot"""
 
-import os
-import json
-import random
-import requests
 import logging
-from dpath.util import get
+import os
+import random
 from typing import List, Union
+
+import requests
+from dpath.util import get
 
 from . import database as db
 from .. import __version__
@@ -16,56 +16,56 @@ WIT_AI_URL = 'https://api.wit.ai/message'
 WIT_AI_TOKEN = os.environ['WIT_AI_CLIENT_TOKEN']
 
 
-def get_bot_response(sender, text=None, attachments=None) -> str:
+def get_bot_response(sender, text=None, attachments=None) -> Union[str, None]:
     """Generate response based text, attachments and nlp entities"""
     try:
         if text:
             entities = _get_entities(text)
 
-            if ('@help' in text):
+            if '@help' in text:
                 return _get_help_txt()
 
             # detection using intent
-            if (entities.get('intent')):
+            if entities.get('intent'):
                 intent = entities['intent'][0]['value']
 
-                if (intent == 'help'):
+                if intent == 'help':
                     return _get_help_txt()
-                if (intent == 'positive'):
+                if intent == 'positive':
                     return _process(_get_responses('positive'))
-                if (intent == 'negative'):
+                if intent == 'negative':
                     return _process(_get_responses('negative'))
-                if (intent == 'getBotIdentity'):
+                if intent == 'getBotIdentity':
                     return _process(_get_responses('identity'))
 
                 # greetings (hi, bye, thanks)
-                if (intent == 'greetings'):
+                if intent == 'greetings':
                     return _process(_get_responses('greetings'))
-                if (intent == 'bye'):
+                if intent == 'bye':
                     return _process(_get_responses('bye'))
-                if (intent == 'thanks'):
+                if intent == 'thanks':
                     return _process(_get_responses('thanks'))
 
                 # tasks
-                if (intent == 'getSchedule'):
+                if intent == 'getSchedule':
                     routine = db.get_info('routine')
                     gcal = db.get_info('google_calendar/url')
-                    return f"The routine for 3-1 2020 is here {routine}\nYou can find an updated google calendar schedule here {gcal}"
-                if (intent == 'getSiteLink'):
-                    if (entities.get('website')):
+                    return f"The routine for 3-1 2020 is here {routine}\n" \
+                           f"You can find an updated google calendar schedule here {gcal}"
+                if intent == 'getSiteLink':
+                    if entities.get('website'):
                         return db.get_info('site/' + entities['website'][0]['value'])
                     else:
                         sites = db.get_info('site')
                         return '\n'.join(f"{site.upper()} site link: {link}" for site, link in sites.items())
-                if (intent == 'getSyllabus'):
-                    syllabus = None
+                if intent == 'getSyllabus':
                     if entities.get('exam'):
                         syllabus = db.get_info(
                             'site/' + entities['exam'][0]['value'])
                     else:
                         syllabus = db.get_info('site/__all__')
                     return f"I think what you're looking for is here {syllabus}"
-                if (intent == 'getDriveLink'):
+                if intent == 'getDriveLink':
                     drives = db.get_info('google_drive')
                     if entities.get('name') and entities['name'][0]['value'].lower() in drives:
                         name = entities['name'][0]['value']
@@ -73,15 +73,15 @@ def get_bot_response(sender, text=None, attachments=None) -> str:
                         return f"{name}'s drive folder link:\n{link}"
                     else:
                         return f"You'll find all the drive links here\n{drives['__all__']}"
-                if (intent == 'getJoke'):
+                if intent == 'getJoke':
                     return _get_joke()
 
             # detection using other entities
-            if (entities.get('greetings')):
+            if entities.get('greetings'):
                 return _process(_get_responses('greetings'))
-            if (entities.get('bye')):
+            if entities.get('bye'):
                 return _process(_get_responses('bye'))
-            if (entities.get('thanks')):
+            if entities.get('thanks'):
                 return _process(_get_responses('thanks'))
 
         # when bot doesn't understand the text
@@ -92,22 +92,18 @@ def get_bot_response(sender, text=None, attachments=None) -> str:
         return None
 
 
-def _process(entry: Union[str, List[str], List[List[str]]]) -> str:
+def _process(arg: Union[str, List[str], List[List[str]]]) -> str:
     """Process entries from database to generate responses"""
-    try:
-        if isinstance(entry, str):  # if string return directly
-            return entry
-        elif isinstance(entry, list):
-            if isinstance(entry[0], list):  # if it is a list of lists
-                # choose random string from each (internal) list and concatenate them
-                return ''.join(random.choice(i) for i in entry)
-            elif isinstance(entry[0], str):  # if it is a list of strings
-                # choose random string from list
-                return random.choice(entry)
-        raise "Incorrect type"
-    except:
-        logging.error("Incorrect formatting of data in database")
-        return ""
+    if isinstance(arg, str):  # if string return directly
+        return arg
+    elif isinstance(arg, list):
+        if all(isinstance(ele, list) for ele in arg):  # if it is a list of lists
+            # choose random string from each (internal) list and concatenate them
+            return ''.join(random.choice(ele) for ele in arg)
+        elif all(isinstance(ele, str) for ele in arg):  # if it is a list of strings
+            # choose random string from list
+            return random.choice(arg)
+    raise TypeError("Incorrect format")
 
 
 def _get_responses(key: str) -> Union[str, List[str], List[List[str]]]:
@@ -123,8 +119,8 @@ def _get_responses(key: str) -> Union[str, List[str], List[List[str]]]:
 
 def _get_entities(msg: str) -> dict:
     """Get nlp entities using wit.ai"""
-    headers = {'Authorization': 'Bearer ' + WIT_AI_TOKEN}
-    params = (('v', '20200328'), ('q', msg),)
+    headers = {'Authorization': 'Bearer ' + WIT_AI_TOKEN, }
+    params = {'v': '20200328', 'q': msg, }
     response = requests.get(WIT_AI_URL, headers=headers, params=params)
     return response.json()['entities']
 
