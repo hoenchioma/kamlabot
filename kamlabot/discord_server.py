@@ -10,15 +10,16 @@ KEYWORD = '!kamla'
 # discord client (bot)
 client = discord.Client()
 
-# set logging level to info
-logging.basicConfig(level=logging.INFO)
+# setup logger
+logging.basicConfig(level=logging.INFO,
+                    format='[DISCORD] %(levelname)s : %(module)s.%(funcName)s : %(message)s')
 
 
 @client.event
 async def on_ready():
-    logging.info("[DISCORD] Discord bot server started ...")
+    logging.info("Discord bot server started ...")
     logging.info(
-        f"[DISCORD] Logged in as [username: {str(client.user.name)}, id: {str(client.user.id)}]"
+        f"Logged in as [username: {str(client.user.name)}, id: {str(client.user.id)}]"
     )
 
 
@@ -57,7 +58,7 @@ async def on_message(msg):
 
     if response:  # response isn't empty
         await channel.send(response)
-        logging.info(f"[DISCORD] Response sent to {channel.name}")
+        logging.info(f"Response sent to {channel.name}")
 
 
 def _process_msg(txt, author):
