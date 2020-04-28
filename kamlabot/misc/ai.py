@@ -63,7 +63,7 @@ def get_bot_response(sender, text=None, attachments=None):
                         syllabus = db.get_info(
                             'site/' + entities['exam'][0]['value'])
                     else:
-                        syllabus = db.get_info('site/_all')
+                        syllabus = db.get_info('site/__all__')
                     return f"I think what you're looking for is here {syllabus}"
                 if (intent == 'getDriveLink'):
                     drives = db.get_info('google_drive')
@@ -72,7 +72,7 @@ def get_bot_response(sender, text=None, attachments=None):
                         link = drives[name.lower()]
                         return f"{name}'s drive folder link:\n{link}"
                     else:
-                        return f"You'll find all the drive links here\n{drives['_all']}"
+                        return f"You'll find all the drive links here\n{drives['__all__']}"
                 if (intent == 'getJoke'):
                     return _get_joke()
 
