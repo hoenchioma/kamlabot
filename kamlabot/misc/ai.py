@@ -6,6 +6,7 @@ import random
 import requests
 import logging
 from dpath.util import get
+from typing import List, Union
 
 from . import database as db
 from .. import __version__
@@ -15,7 +16,7 @@ WIT_AI_URL = 'https://api.wit.ai/message'
 WIT_AI_TOKEN = os.environ['WIT_AI_CLIENT_TOKEN']
 
 
-def get_bot_response(sender, text=None, attachments=None):
+def get_bot_response(sender, text=None, attachments=None) -> str:
     """Generate response based text, attachments and nlp entities"""
     try:
         if text:
@@ -91,7 +92,7 @@ def get_bot_response(sender, text=None, attachments=None):
         return None
 
 
-def _process(entry) -> str:
+def _process(entry: Union[str, List[str], List[List[str]]]) -> str:
     """Process entries from database to generate responses"""
     try:
         if isinstance(entry, str):  # if string return directly
@@ -109,7 +110,7 @@ def _process(entry) -> str:
         return ""
 
 
-def _get_responses(key: str):
+def _get_responses(key: str) -> Union[str, List[str], List[List[str]]]:
     """Get responses from db according to key"""
     try:
         # return cached result
@@ -148,7 +149,7 @@ def _get_joke() -> str:
         return response.text
 
 
-def _get_help_txt():
+def _get_help_txt() -> str:
     """Return help text with the version number of the app"""
     return _process(_get_responses('help')) + f"\n\n(kamlabot v{__version__})"
 
