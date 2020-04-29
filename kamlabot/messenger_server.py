@@ -1,9 +1,11 @@
-import os
 import logging
+import os
+
 from flask import Flask, request, redirect
 from pymessenger.bot import Bot
 
-from .misc.ai import get_bot_response
+from .misc import ai
+from . import VERBOSE
 
 GITHUB_URL = 'https://github.com/hoenchioma/kamlabot'
 
@@ -77,9 +79,23 @@ def _respond(sender, text=None, attachments=None):
     """Formulate a response to the user and
     pass it on to a function that sends it."""
 
-    response = get_bot_response(sender, text, attachments)
-    if response:
-        _send_message(sender, response)
+    try:
+        response = ai.get_bot_response(sender, text, attachments)
+        try:
+            _send_message(sender, response)
+
+            # log event
+            if VERBOSE:
+                logging.info("Response successfully sent\n"
+                             f"sender: {sender}\n"
+                             f"message: {text}\n"
+                             f"response: {response}")
+            else:
+                logging.info(f"Response sent successfully to {sender}")
+        except:
+            logging.exception("Error sending generated response to Facebook")
+    except:
+        logging.exception("Error generating response")
 
 
 def main():
