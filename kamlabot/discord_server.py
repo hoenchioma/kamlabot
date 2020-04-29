@@ -59,7 +59,7 @@ async def on_message(msg: discord.Message):
                 # log the event
                 if VERBOSE:
                     logging.info("Response successfully sent\n"
-                                 f"sender: [name: {msg.author.id}, id: {msg.author.id}]\n"
+                                 f"sender: [name: {msg.author.name}, id: {msg.author.id}]\n"
                                  f"channel: {_get_channel_identifier(channel)}"
                                  f"message: {txt}\n"
                                  f"response: {response}")
