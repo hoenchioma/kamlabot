@@ -1,9 +1,11 @@
-import os
 import logging
+import os
+
 from flask import Flask, request, redirect
 from pymessenger.bot import Bot
 
-from .misc.ai import get_bot_response
+from .misc import ai
+from . import VERBOSE
 
 GITHUB_URL = 'https://github.com/hoenchioma/kamlabot'
 
@@ -11,12 +13,13 @@ GITHUB_URL = 'https://github.com/hoenchioma/kamlabot'
 ACCESS_TOKEN = os.environ['FB_ACCESS_TOKEN']
 VERIFY_TOKEN = os.environ['FB_VERIFY_TOKEN']
 
+# setup logger
+logging.basicConfig(level=logging.INFO,
+                    format='[MESSENGER] %(levelname)s : %(module)s.%(funcName)s : %(message)s')
+
 # initialize app
 app = Flask(__name__)
 bot = Bot(ACCESS_TOKEN)
-
-# set logging level to info
-logging.basicConfig(level=logging.INFO)
 
 
 @app.route('/')
@@ -67,7 +70,7 @@ def _send_message(recipient_id, text):
     """Send a response to Facebook"""
 
     bot.send_text_message(recipient_id, text)
-    
+
     logging.info(f"Response sent to {recipient_id}")
     return "success"
 
@@ -76,9 +79,23 @@ def _respond(sender, text=None, attachments=None):
     """Formulate a response to the user and
     pass it on to a function that sends it."""
 
-    response = get_bot_response(sender, text, attachments)
-    if response:
-        _send_message(sender, response)
+    try:
+        response = ai.get_bot_response(sender, text, attachments)
+        try:
+            _send_message(sender, response)
+
+            # log event
+            if VERBOSE:
+                logging.info("Response successfully sent\n"
+                             f"sender: {sender}\n"
+                             f"message: {text}\n"
+                             f"response: {response}")
+            else:
+                logging.info(f"Response sent successfully to {sender}")
+        except:
+            logging.exception("Error sending generated response to Facebook")
+    except:
+        logging.exception("Error generating response")
 
 
 def main():
