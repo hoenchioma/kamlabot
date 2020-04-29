@@ -16,80 +16,75 @@ WIT_AI_URL = 'https://api.wit.ai/message'
 WIT_AI_TOKEN = os.environ['WIT_AI_CLIENT_TOKEN']
 
 
-def get_bot_response(sender, text=None, attachments=None) -> Union[str, None]:
+def get_bot_response(sender, text=None, attachments=None) -> str:
     """Generate response based text, attachments and nlp entities"""
-    try:
-        if text:
-            entities = _get_entities(text)
+    if text:
+        entities = _get_entities(text)
 
-            if '@help' in text:
+        if '@help' in text:
+            return _get_help_txt()
+
+        # detection using intent
+        if entities.get('intent'):
+            intent = entities['intent'][0]['value']
+
+            if intent == 'help':
                 return _get_help_txt()
+            if intent == 'positive':
+                return _process(_get_responses('positive'))
+            if intent == 'negative':
+                return _process(_get_responses('negative'))
+            if intent == 'getBotIdentity':
+                return _process(_get_responses('identity'))
 
-            # detection using intent
-            if entities.get('intent'):
-                intent = entities['intent'][0]['value']
-
-                if intent == 'help':
-                    return _get_help_txt()
-                if intent == 'positive':
-                    return _process(_get_responses('positive'))
-                if intent == 'negative':
-                    return _process(_get_responses('negative'))
-                if intent == 'getBotIdentity':
-                    return _process(_get_responses('identity'))
-
-                # greetings (hi, bye, thanks)
-                if intent == 'greetings':
-                    return _process(_get_responses('greetings'))
-                if intent == 'bye':
-                    return _process(_get_responses('bye'))
-                if intent == 'thanks':
-                    return _process(_get_responses('thanks'))
-
-                # tasks
-                if intent == 'getSchedule':
-                    routine = db.get_info('routine')
-                    gcal = db.get_info('google_calendar/url')
-                    return f"The routine for 3-1 2020 is here {routine}\n" \
-                           f"You can find an updated google calendar schedule here {gcal}"
-                if intent == 'getSiteLink':
-                    if entities.get('website'):
-                        return db.get_info('site/' + entities['website'][0]['value'])
-                    else:
-                        sites = db.get_info('site')
-                        return '\n'.join(f"{site.upper()} site link: {link}" for site, link in sites.items())
-                if intent == 'getSyllabus':
-                    if entities.get('exam'):
-                        syllabus = db.get_info(
-                            'site/' + entities['exam'][0]['value'])
-                    else:
-                        syllabus = db.get_info('site/__all__')
-                    return f"I think what you're looking for is here {syllabus}"
-                if intent == 'getDriveLink':
-                    drives = db.get_info('google_drive')
-                    if entities.get('name') and entities['name'][0]['value'].lower() in drives:
-                        name = entities['name'][0]['value']
-                        link = drives[name.lower()]
-                        return f"{name}'s drive folder link:\n{link}"
-                    else:
-                        return f"You'll find all the drive links here\n{drives['__all__']}"
-                if intent == 'getJoke':
-                    return _get_joke()
-
-            # detection using other entities
-            if entities.get('greetings'):
+            # greetings (hi, bye, thanks)
+            if intent == 'greetings':
                 return _process(_get_responses('greetings'))
-            if entities.get('bye'):
+            if intent == 'bye':
                 return _process(_get_responses('bye'))
-            if entities.get('thanks'):
+            if intent == 'thanks':
                 return _process(_get_responses('thanks'))
 
-        # when bot doesn't understand the text
-        return _process(_get_responses('no_reply'))
+            # tasks
+            if intent == 'getSchedule':
+                routine = db.get_info('routine')
+                gcal = db.get_info('google_calendar/url')
+                return f"The routine for 3-1 2020 is here {routine}\n" \
+                       f"You can find an updated google calendar schedule here {gcal}"
+            if intent == 'getSiteLink':
+                if entities.get('website'):
+                    return db.get_info('site/' + entities['website'][0]['value'])
+                else:
+                    sites = db.get_info('site')
+                    return '\n'.join(f"{site.upper()} site link: {link}" for site, link in sites.items())
+            if intent == 'getSyllabus':
+                if entities.get('exam'):
+                    syllabus = db.get_info(
+                        'site/' + entities['exam'][0]['value'])
+                else:
+                    syllabus = db.get_info('site/__all__')
+                return f"I think what you're looking for is here {syllabus}"
+            if intent == 'getDriveLink':
+                drives = db.get_info('google_drive')
+                if entities.get('name') and entities['name'][0]['value'].lower() in drives:
+                    name = entities['name'][0]['value']
+                    link = drives[name.lower()]
+                    return f"{name}'s drive folder link:\n{link}"
+                else:
+                    return f"You'll find all the drive links here\n{drives['__all__']}"
+            if intent == 'getJoke':
+                return _get_joke()
 
-    except Exception as exp:
-        logging.error(f"Error generating response ({str(exp)})")
-        return None
+        # detection using other entities
+        if entities.get('greetings'):
+            return _process(_get_responses('greetings'))
+        if entities.get('bye'):
+            return _process(_get_responses('bye'))
+        if entities.get('thanks'):
+            return _process(_get_responses('thanks'))
+
+    # when bot doesn't understand the text
+    return _process(_get_responses('no_reply'))
 
 
 def _process(arg: Union[str, List[str], List[List[str]]]) -> str:
@@ -97,12 +92,15 @@ def _process(arg: Union[str, List[str], List[List[str]]]) -> str:
     if isinstance(arg, str):  # if string return directly
         return arg
     elif isinstance(arg, list):
-        if all(isinstance(ele, list) for ele in arg):  # if it is a list of lists
-            # choose random string from each (internal) list and concatenate them
-            return ''.join(random.choice(ele) for ele in arg)
-        elif all(isinstance(ele, str) for ele in arg):  # if it is a list of strings
+        # list of lists of strings
+        if all(isinstance(i, str) for i in arg):
             # choose random string from list
             return random.choice(arg)
+        # list of lists of strings
+        elif all(isinstance(i, list) for i in arg) \
+                and all(all(isinstance(j, str) for j in i) for i in arg):
+            # choose random string from each (internal) list and concatenate them
+            return ''.join(random.choice(i) for i in arg)
     raise TypeError("Incorrect format")
 
 
