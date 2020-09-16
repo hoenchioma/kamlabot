@@ -21,11 +21,17 @@ logging.basicConfig(level=logging.INFO,
 app = Flask(__name__)
 bot = Bot(ACCESS_TOKEN)
 
+WOKE = False
 
 @app.route('/')
 def hello():
-    """Redirect to GitHub page when someone visits site"""
-    return redirect(GITHUB_URL)
+    global WOKE
+    text = f'Hello there 😄, this the landing page of kamlabot.<br>It\'s pretty empty right now.<br>You can go here <a href="{GITHUB_URL}">here</a> to see the GitHub page.'
+    if not WOKE:
+        WOKE = True
+        return "Was sleep, am woke now 😴. The discord bot should work now" + "<br><br>" + text
+    else:
+        return text 
 
 
 @app.route('/webhook', methods=['GET', 'POST'])
